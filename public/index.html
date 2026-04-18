@@ -424,6 +424,40 @@
       .player-points { font-size: 1.4rem; }
       h1 { font-size: 1.5rem; }
     }
+
+    /* Cronômetro */
+    .timer-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .timer-circle {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 3px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      font-weight: 700;
+      font-family: monospace;
+      transition: border-color 0.3s, color 0.3s;
+    }
+
+    .timer-circle.ok    { border-color: var(--green);  color: var(--green); }
+    .timer-circle.warn  { border-color: var(--yellow); color: var(--yellow); }
+    .timer-circle.danger{ border-color: var(--red);    color: var(--red); animation: pulse 0.6s ease-in-out infinite; }
+
+    .timer-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
   </style>
 </head>
 <body>
@@ -495,6 +529,11 @@
     <div class="progress-bar">
       <div class="progress-fill" id="progress-fill" style="width:0%"></div>
     </div>
+    <!-- Cronômetro -->
+    <div class="timer-display">
+      <div class="timer-circle ok" id="timer-circle">10</div>
+      <span class="timer-label">segundos</span>
+    </div>
     <div class="prefix-display" id="prefix-display"></div>
     <p class="hint-text" id="hint-text">Digite uma palavra que começa com essa(s) letra(s)</p>
     <div class="word-input-row" id="input-row">
@@ -516,10 +555,9 @@
 
 <script>
   // ===================== CONFIG =====================
-  // Troque pela URL do seu servidor quando hospedar
   const SERVER_URL = window.location.hostname === 'localhost'
     ? 'https://letraduelo.onrender.com/'
-    : 'https://letraduelo.onrender.com/'; // <- Coloque a URL do backend aqui após o deploy
+    : 'https://letraduelo.onrender.com/';
 
   // ===================== ESTADO =====================
   let socket;
@@ -532,14 +570,59 @@
   let nomes = ['', ''];
   let isConectado = false;
 
+  // ===================== CRONÔMETRO =====================
+  let timerInterval = null;
+  let timerSegundos = 10;
+  const TIMER_INICIAL = 10;
+
+  function iniciarTimer() {
+    pararTimer();
+    timerSegundos = TIMER_INICIAL;
+    atualizarTimerDisplay();
+
+    timerInterval = setInterval(() => {
+      timerSegundos--;
+      atualizarTimerDisplay();
+
+      if (timerSegundos <= 0) {
+        pararTimer();
+        // Tempo esgotado: envia palavra inválida automaticamente
+        socket.emit('enviar_palavra', { salaId, palavra: '___TIMEOUT___' });
+      }
+    }, 1000);
+  }
+
+  function pararTimer() {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+  }
+
+  function atualizarTimerDisplay() {
+    const circle = document.getElementById('timer-circle');
+    if (!circle) return;
+    circle.textContent = timerSegundos;
+
+    circle.className = 'timer-circle';
+    if (timerSegundos > 5)       circle.classList.add('ok');
+    else if (timerSegundos > 2)  circle.classList.add('warn');
+    else                          circle.classList.add('danger');
+  }
+
+  function resetarTimerDisplay() {
+    pararTimer();
+    timerSegundos = TIMER_INICIAL;
+    atualizarTimerDisplay();
+    const circle = document.getElementById('timer-circle');
+    if (circle) circle.className = 'timer-circle ok';
+  }
+
   // ===================== INICIALIZAÇÃO =====================
   function init() {
-    // Verifica se tem sala na URL
     const params = new URLSearchParams(window.location.search);
     const salaParam = params.get('sala');
-    if (salaParam) {
-      document.getElementById('inp-sala').value = salaParam;
-    }
+    if (salaParam) document.getElementById('inp-sala').value = salaParam;
 
     socket = io(SERVER_URL, { transports: ['websocket', 'polling'] });
 
@@ -548,9 +631,7 @@
     socket.on('erro', (msg) => { alert(msg); });
 
     socket.on('sala_atualizada', (data) => {
-      if (data.fase === 'aguardando') {
-        mostrarWaiting();
-      }
+      if (data.fase === 'aguardando') mostrarWaiting();
     });
 
     socket.on('iniciar_jogo', (data) => {
@@ -560,6 +641,7 @@
     });
 
     socket.on('resultado_rodada', (data) => {
+      pararTimer(); // Para o timer ao receber resultado
       atualizarPontos(data.pontos);
       mostrarResultado(data);
     });
@@ -570,13 +652,18 @@
       letraAtualIdx = data.letraAtual;
       totalLetras = data.totalLetras;
       atualizarRodada(data);
+      // Nova rodada: timer volta ao inicial e começa se for minha vez
+      if (meuIdx === data.turno) iniciarTimer();
+      else resetarTimerDisplay();
     });
 
     socket.on('fim_jogo', (data) => {
+      pararTimer();
       mostrarFim(data);
     });
 
     socket.on('jogador_saiu', (data) => {
+      pararTimer();
       setFeedback(`⚠️ ${data.nome} saiu do jogo.`, 'warning');
     });
   }
@@ -596,16 +683,13 @@
     salaId = sala;
     socket.emit('entrar_sala', { salaId: sala, nome });
 
-    // Detectar se é o primeiro (criador)
     socket.once('sala_atualizada', (data) => {
       if (data.jogadores && data.jogadores.length === 1) {
-        // Sou o criador
         mostrarWaiting();
         const link = `${window.location.origin}${window.location.pathname}?sala=${sala}`;
         document.getElementById('link-sala').value = link;
         document.getElementById('codigo-sala').textContent = sala;
       } else {
-        // Segundo jogador, aguarda jogo iniciar
         document.getElementById('lobby-screen').style.display = 'none';
       }
     });
@@ -636,8 +720,6 @@
     document.getElementById('game-screen').style.display = 'block';
 
     nomes = [data.jogadores[0].nome, data.jogadores[1].nome];
-
-    // Avatars
     document.getElementById('avatar-p1').textContent = nomes[0][0].toUpperCase();
     document.getElementById('avatar-p2').textContent = nomes[1][0].toUpperCase();
     document.getElementById('name-p1').textContent = nomes[0];
@@ -658,6 +740,11 @@
       letraAtual: data.letraAtual,
       totalLetras: data.totalLetras,
     });
+
+    // Inicia timer apenas para quem é a vez
+    if (meuIdx === data.turno) iniciarTimer();
+    else resetarTimerDisplay();
+
     setFeedback('Jogo começou! Boa sorte!', '');
   }
 
@@ -667,13 +754,10 @@
     letraAtualIdx = data.letraAtual !== undefined ? data.letraAtual : letraAtualIdx;
     totalLetras = data.totalLetras || totalLetras;
 
-    const totalRodadas = data.totalRodadas;
-    const rodadaAtual = data.rodadaAtual;
+    document.getElementById('round-info').textContent = `Rodada ${data.rodadaAtual + 1} de ${data.totalRodadas}`;
+    document.getElementById('game-round-top').textContent = `${data.rodadaAtual + 1}/${data.totalRodadas}`;
 
-    document.getElementById('round-info').textContent = `Rodada ${rodadaAtual + 1} de ${totalRodadas}`;
-    document.getElementById('game-round-top').textContent = `${rodadaAtual + 1}/${totalRodadas}`;
-
-    const pct = ((rodadaAtual) / totalRodadas) * 100;
+    const pct = (data.rodadaAtual / data.totalRodadas) * 100;
     document.getElementById('progress-fill').style.width = pct + '%';
 
     renderPrefixo(prefixoAtual, totalLetras);
@@ -711,7 +795,6 @@
       }
       el.appendChild(div);
     }
-    // Hint
     document.getElementById('hint-text').textContent =
       `Digite uma palavra que começa com "${prefixo}"`;
   }
@@ -757,6 +840,7 @@
         letraAtualIdx = data.letraAtual;
         turnoAtual = data.proximoTurno;
         atualizarTurnos();
+
         const input = document.getElementById('word-input');
         const btn = document.getElementById('btn-enviar');
         if (meuIdx === turnoAtual) {
@@ -765,10 +849,12 @@
           btn.disabled = false;
           input.placeholder = 'Sua vez!';
           input.focus();
+          iniciarTimer(); // ← começa timer para quem recebeu a vez
         } else {
           document.getElementById('input-row').className = 'word-input-row not-your-turn';
           input.disabled = true;
           btn.disabled = true;
+          resetarTimerDisplay(); // ← mostra 10 parado para quem está esperando
         }
         input.value = '';
       }
@@ -785,6 +871,7 @@
     const input = document.getElementById('word-input');
     const palavra = input.value.trim();
     if (!palavra) return;
+    pararTimer();
     socket.emit('enviar_palavra', { salaId, palavra });
     input.value = '';
   }
@@ -821,7 +908,6 @@
     document.getElementById('pts-p2').textContent = '0';
   }
 
-  // Tecla Enter no input
   document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('word-input').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') enviarPalavra();
