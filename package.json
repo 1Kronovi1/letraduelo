@@ -1,0 +1,7 @@
+{
+  "name": "letraduelo",
+  "version": "1.0.0",
+  "description": "Jogo multiplayer de palavras em tempo real",
+  "private": true,
+  "workspaces": ["server"]
+}

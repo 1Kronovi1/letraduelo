@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LetraDuelo</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f13;
+      --surface: #1a1a22;
+      --surface2: #22222e;
+      --border: #2e2e3e;
+      --text: #f0f0f5;
+      --muted: #8888aa;
+      --accent: #6c63ff;
+      --accent2: #ff6584;
+      --green: #4ade80;
+      --red: #f87171;
+      --yellow: #facc15;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 0.25rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-size: 0.75rem;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 1rem;
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 0.75rem;
+    }
+
+    input[type="text"]:focus { border-color: var(--accent); }
+    input[type="text"]::placeholder { color: var(--muted); }
+
+    button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--radius-sm);
+      border: none;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      width: 100%;
+    }
+    .btn-primary:hover { filter: brightness(1.15); }
+    .btn-primary:active { transform: scale(0.98); }
+
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: var(--border); }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin: 1rem 0;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Sala waiting */
+    .waiting-info {
+      text-align: center;
+      padding: 1rem 0;
+    }
+    .waiting-info .big-letter {
+      font-size: 3rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 4px;
+      font-family: monospace;
+    }
+    .copy-link {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .copy-link input {
+      flex: 1;
+      margin-bottom: 0;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .copy-link button {
+      padding: 0.75rem 1rem;
+      white-space: nowrap;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 0.85rem;
+    }
+
+    /* Game screen */
+    #game-screen { display: none; width: 100%; max-width: 600px; }
+
+    .players-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .player-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      text-align: center;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .player-card.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(108,99,255,0.2);
+    }
+
+    .player-card.active-p2 {
+      border-color: var(--accent2);
+      box-shadow: 0 0 0 2px rgba(255,101,132,0.2);
+    }
+
+    .player-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin: 0 auto 0.5rem;
+    }
+
+    .avatar-1 { background: rgba(108,99,255,0.2); color: var(--accent); }
+    .avatar-2 { background: rgba(255,101,132,0.2); color: var(--accent2); }
+
+    .player-name {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-points {
+      font-size: 1.75rem;
+      font-weight: 700;
+    }
+
+    .p1-points { color: var(--accent); }
+    .p2-points { color: var(--accent2); }
+
+    .turn-badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-top: 0.25rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .badge-1 { background: rgba(108,99,255,0.2); color: var(--accent); }
+    .badge-2 { background: rgba(255,101,132,0.2); color: var(--accent2); }
+
+    .game-body {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .round-info {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 1.5rem;
+    }
+
+    .prefix-display {
+      font-size: 3rem;
+      font-weight: 800;
+      letter-spacing: 8px;
+      font-family: monospace;
+      margin-bottom: 0.5rem;
+      min-height: 4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .prefix-char {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 56px;
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      font-size: 2rem;
+      transition: all 0.3s;
+    }
+
+    .prefix-char.revealed {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(108,99,255,0.1);
+    }
+
+    .prefix-char.hidden {
+      color: transparent;
+      background: var(--surface2);
+      border-color: var(--border);
+      position: relative;
+    }
+
+    .prefix-char.hidden::after {
+      content: '?';
+      position: absolute;
+      color: var(--border);
+      font-size: 1.5rem;
+    }
+
+    .hint-text {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .word-input-row {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .word-input-row input {
+      flex: 1;
+      margin-bottom: 0;
+      font-size: 1.1rem;
+      text-transform: uppercase;
+    }
+
+    .word-input-row button {
+      padding: 0.75rem 1.25rem;
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.9rem;
+    }
+
+    .word-input-row button:hover { filter: brightness(1.15); }
+    .word-input-row button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      filter: none;
+    }
+
+    /* Feedback */
+    .feedback-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.5rem;
+      font-size: 0.95rem;
+      color: var(--muted);
+      text-align: center;
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+
+    .feedback-box.success { border-color: var(--green); color: var(--green); background: rgba(74,222,128,0.05); }
+    .feedback-box.error { border-color: var(--red); color: var(--red); background: rgba(248,113,113,0.05); }
+    .feedback-box.warning { border-color: var(--yellow); color: var(--yellow); background: rgba(250,204,21,0.05); }
+
+    /* End screen */
+    #end-screen {
+      display: none;
+      width: 100%;
+      max-width: 480px;
+      text-align: center;
+    }
+
+    .trophy { font-size: 4rem; margin-bottom: 1rem; }
+    .winner-name { font-size: 2rem; font-weight: 700; margin-bottom: 0.25rem; }
+    .draw-text { font-size: 1.5rem; font-weight: 600; color: var(--yellow); }
+
+    .final-scores {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+
+    .final-score-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+    }
+
+    .final-score-card .name { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.5rem; }
+    .final-score-card .pts { font-size: 2.5rem; font-weight: 700; }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .pulse { animation: pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .fade-in { animation: fadeIn 0.4s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .not-your-turn { opacity: 0.6; pointer-events: none; }
+    .your-turn { opacity: 1; }
+
+    .progress-bar {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 2px;
+      transition: width 0.5s ease;
+    }
+
+    @media (max-width: 480px) {
+      .prefix-char { width: 36px; height: 44px; font-size: 1.5rem; }
+      .game-body { padding: 1.25rem; }
+      .player-points { font-size: 1.4rem; }
+      h1 { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TELA INICIAL -->
+<div id="lobby-screen">
+  <h1>LetraDuelo</h1>
+  <p class="subtitle">Batalha de palavras em tempo real</p>
+
+  <div class="card" id="join-card">
+    <div class="card-title">Entrar no jogo</div>
+    <input type="text" id="inp-nome" placeholder="Seu nome" maxlength="20" />
+    <input type="text" id="inp-sala" placeholder="Código da sala (ex: 1234)" maxlength="10" />
+    <button class="btn-primary" onclick="entrarSala()">
+      <span>Entrar na sala</span>
+    </button>
+
+    <div class="divider">ou</div>
+
+    <button class="btn-secondary" style="width:100%;" onclick="criarSalaAleatoria()">
+      Criar nova sala
+    </button>
+  </div>
+</div>
+
+<!-- TELA DE AGUARDANDO -->
+<div id="waiting-screen" style="display:none; width:100%; max-width:480px; text-align:center;">
+  <h1>LetraDuelo</h1>
+  <p class="subtitle">Aguardando oponente...</p>
+  <div class="card">
+    <div class="waiting-info">
+      <div class="spinner" style="width:32px; height:32px; border-width:3px; margin:0 auto 1rem;"></div>
+      <p style="color:var(--muted); margin-bottom:1.5rem;">Sala criada! Envie o link abaixo para seu amigo:</p>
+      <div class="copy-link">
+        <input type="text" id="link-sala" readonly />
+        <button onclick="copiarLink()" id="btn-copiar">Copiar</button>
+      </div>
+      <p style="margin-top:0.75rem; font-size:0.8rem; color:var(--muted);">
+        Ou compartilhe o código: <strong id="codigo-sala" style="color:var(--accent);"></strong>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- TELA DO JOGO -->
+<div id="game-screen">
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+    <h1 style="font-size:1.25rem; margin-bottom:0;">LetraDuelo</h1>
+    <span id="game-round-top" style="font-size:0.8rem; color:var(--muted);"></span>
+  </div>
+
+  <div class="players-row">
+    <div class="player-card" id="card-p1">
+      <div class="player-avatar avatar-1" id="avatar-p1">?</div>
+      <div class="player-name" id="name-p1">Jogador 1</div>
+      <div class="player-points p1-points" id="pts-p1">0</div>
+      <div><span class="turn-badge badge-1" id="badge-p1" style="display:none;">Vez dele</span></div>
+    </div>
+    <div class="player-card" id="card-p2">
+      <div class="player-avatar avatar-2" id="avatar-p2">?</div>
+      <div class="player-name" id="name-p2">Jogador 2</div>
+      <div class="player-points p2-points" id="pts-p2">0</div>
+      <div><span class="turn-badge badge-2" id="badge-p2" style="display:none;">Vez dele</span></div>
+    </div>
+  </div>
+
+  <div class="game-body fade-in">
+    <div class="round-info" id="round-info">Rodada 1 de 10</div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+    <div class="prefix-display" id="prefix-display"></div>
+    <p class="hint-text" id="hint-text">Digite uma palavra que começa com essa(s) letra(s)</p>
+    <div class="word-input-row" id="input-row">
+      <input type="text" id="word-input" placeholder="Sua palavra..." autocomplete="off" autocorrect="off" spellcheck="false" />
+      <button id="btn-enviar" onclick="enviarPalavra()">Enviar</button>
+    </div>
+  </div>
+
+  <div class="feedback-box" id="feedback-box">Aguardando início...</div>
+</div>
+
+<!-- TELA FINAL -->
+<div id="end-screen">
+  <div class="trophy" id="trophy-icon">🏆</div>
+  <div id="winner-display"></div>
+  <div class="final-scores" id="final-scores"></div>
+  <button class="btn-primary" onclick="reiniciar()">Jogar novamente</button>
+</div>
+
+<script>
+  // ===================== CONFIG =====================
+  // Troque pela URL do seu servidor quando hospedar
+  const SERVER_URL = window.location.hostname === 'localhost'
+    ? 'http://localhost:3001'
+    : 'https://SEU-BACKEND.onrender.com'; // <- Coloque a URL do backend aqui após o deploy
+
+  // ===================== ESTADO =====================
+  let socket;
+  let salaId = '';
+  let meuIdx = -1;
+  let turnoAtual = 0;
+  let prefixoAtual = '';
+  let letraAtualIdx = 0;
+  let totalLetras = 0;
+  let nomes = ['', ''];
+  let isConectado = false;
+
+  // ===================== INICIALIZAÇÃO =====================
+  function init() {
+    // Verifica se tem sala na URL
+    const params = new URLSearchParams(window.location.search);
+    const salaParam = params.get('sala');
+    if (salaParam) {
+      document.getElementById('inp-sala').value = salaParam;
+    }
+
+    socket = io(SERVER_URL, { transports: ['websocket', 'polling'] });
+
+    socket.on('connect', () => { isConectado = true; });
+    socket.on('disconnect', () => { isConectado = false; });
+    socket.on('erro', (msg) => { alert(msg); });
+
+    socket.on('sala_atualizada', (data) => {
+      if (data.fase === 'aguardando') {
+        mostrarWaiting();
+      }
+    });
+
+    socket.on('iniciar_jogo', (data) => {
+      nomes = [data.jogadores[0].nome, data.jogadores[1].nome];
+      meuIdx = nomes.indexOf(document.getElementById('inp-nome').value.trim() || 'Jogador');
+      iniciarInterface(data);
+    });
+
+    socket.on('resultado_rodada', (data) => {
+      atualizarPontos(data.pontos);
+      mostrarResultado(data);
+    });
+
+    socket.on('nova_rodada', (data) => {
+      turnoAtual = data.turno;
+      prefixoAtual = data.prefixo;
+      letraAtualIdx = data.letraAtual;
+      totalLetras = data.totalLetras;
+      atualizarRodada(data);
+    });
+
+    socket.on('fim_jogo', (data) => {
+      mostrarFim(data);
+    });
+
+    socket.on('jogador_saiu', (data) => {
+      setFeedback(`⚠️ ${data.nome} saiu do jogo.`, 'warning');
+    });
+  }
+
+  // ===================== LOBBY =====================
+  function criarSalaAleatoria() {
+    const sala = Math.floor(1000 + Math.random() * 9000).toString();
+    document.getElementById('inp-sala').value = sala;
+    entrarSala();
+  }
+
+  function entrarSala() {
+    const nome = document.getElementById('inp-nome').value.trim() || 'Jogador';
+    const sala = document.getElementById('inp-sala').value.trim();
+    if (!sala) { alert('Digite um código de sala!'); return; }
+
+    salaId = sala;
+    socket.emit('entrar_sala', { salaId: sala, nome });
+
+    // Detectar se é o primeiro (criador)
+    socket.once('sala_atualizada', (data) => {
+      if (data.jogadores && data.jogadores.length === 1) {
+        // Sou o criador
+        mostrarWaiting();
+        const link = `${window.location.origin}${window.location.pathname}?sala=${sala}`;
+        document.getElementById('link-sala').value = link;
+        document.getElementById('codigo-sala').textContent = sala;
+      } else {
+        // Segundo jogador, aguarda jogo iniciar
+        document.getElementById('lobby-screen').style.display = 'none';
+      }
+    });
+  }
+
+  function mostrarWaiting() {
+    document.getElementById('lobby-screen').style.display = 'none';
+    document.getElementById('waiting-screen').style.display = 'block';
+    const link = `${window.location.origin}${window.location.pathname}?sala=${salaId}`;
+    document.getElementById('link-sala').value = link;
+    document.getElementById('codigo-sala').textContent = salaId;
+  }
+
+  function copiarLink() {
+    const link = document.getElementById('link-sala').value;
+    navigator.clipboard.writeText(link).then(() => {
+      const btn = document.getElementById('btn-copiar');
+      btn.textContent = 'Copiado!';
+      btn.style.color = 'var(--green)';
+      setTimeout(() => { btn.textContent = 'Copiar'; btn.style.color = ''; }, 2000);
+    });
+  }
+
+  // ===================== JOGO =====================
+  function iniciarInterface(data) {
+    document.getElementById('waiting-screen').style.display = 'none';
+    document.getElementById('lobby-screen').style.display = 'none';
+    document.getElementById('game-screen').style.display = 'block';
+
+    nomes = [data.jogadores[0].nome, data.jogadores[1].nome];
+
+    // Avatars
+    document.getElementById('avatar-p1').textContent = nomes[0][0].toUpperCase();
+    document.getElementById('avatar-p2').textContent = nomes[1][0].toUpperCase();
+    document.getElementById('name-p1').textContent = nomes[0];
+    document.getElementById('name-p2').textContent = nomes[1];
+    document.getElementById('pts-p1').textContent = data.jogadores[0].pontos;
+    document.getElementById('pts-p2').textContent = data.jogadores[1].pontos;
+
+    turnoAtual = data.turno;
+    prefixoAtual = data.prefixo;
+    letraAtualIdx = data.letraAtual;
+    totalLetras = data.totalLetras;
+
+    atualizarRodada({
+      turno: data.turno,
+      prefixo: data.prefixo,
+      rodadaAtual: data.rodadaAtual,
+      totalRodadas: data.totalRodadas,
+      letraAtual: data.letraAtual,
+      totalLetras: data.totalLetras,
+    });
+    setFeedback('Jogo começou! Boa sorte!', '');
+  }
+
+  function atualizarRodada(data) {
+    turnoAtual = data.turno;
+    prefixoAtual = data.prefixo;
+    letraAtualIdx = data.letraAtual !== undefined ? data.letraAtual : letraAtualIdx;
+    totalLetras = data.totalLetras || totalLetras;
+
+    const totalRodadas = data.totalRodadas;
+    const rodadaAtual = data.rodadaAtual;
+
+    document.getElementById('round-info').textContent = `Rodada ${rodadaAtual + 1} de ${totalRodadas}`;
+    document.getElementById('game-round-top').textContent = `${rodadaAtual + 1}/${totalRodadas}`;
+
+    const pct = ((rodadaAtual) / totalRodadas) * 100;
+    document.getElementById('progress-fill').style.width = pct + '%';
+
+    renderPrefixo(prefixoAtual, totalLetras);
+    atualizarTurnos();
+
+    const input = document.getElementById('word-input');
+    const btn = document.getElementById('btn-enviar');
+    if (meuIdx === turnoAtual) {
+      document.getElementById('input-row').className = 'word-input-row your-turn';
+      input.disabled = false;
+      btn.disabled = false;
+      input.placeholder = 'Sua vez! Digite uma palavra...';
+      input.focus();
+      setFeedback(`Sua vez! A palavra começa com "${prefixoAtual}"`, '');
+    } else {
+      document.getElementById('input-row').className = 'word-input-row not-your-turn';
+      input.disabled = true;
+      btn.disabled = true;
+      input.placeholder = 'Aguardando oponente...';
+      setFeedback(`Vez de ${nomes[turnoAtual]}...`, '');
+    }
+    input.value = '';
+  }
+
+  function renderPrefixo(prefixo, total) {
+    const el = document.getElementById('prefix-display');
+    el.innerHTML = '';
+    for (let i = 0; i < total; i++) {
+      const div = document.createElement('div');
+      if (i < prefixo.length) {
+        div.className = 'prefix-char revealed';
+        div.textContent = prefixo[i];
+      } else {
+        div.className = 'prefix-char hidden';
+      }
+      el.appendChild(div);
+    }
+    // Hint
+    document.getElementById('hint-text').textContent =
+      `Digite uma palavra que começa com "${prefixo}"`;
+  }
+
+  function atualizarTurnos() {
+    const b1 = document.getElementById('badge-p1');
+    const b2 = document.getElementById('badge-p2');
+    const c1 = document.getElementById('card-p1');
+    const c2 = document.getElementById('card-p2');
+
+    if (turnoAtual === 0) {
+      c1.className = 'player-card active';
+      c2.className = 'player-card';
+      b1.style.display = 'inline-block';
+      b1.textContent = meuIdx === 0 ? 'Sua vez' : 'Vez dele';
+      b2.style.display = 'none';
+    } else {
+      c2.className = 'player-card active-p2';
+      c1.className = 'player-card';
+      b2.style.display = 'inline-block';
+      b2.textContent = meuIdx === 1 ? 'Sua vez' : 'Vez dele';
+      b1.style.display = 'none';
+    }
+  }
+
+  function atualizarPontos(pontos) {
+    document.getElementById('pts-p1').textContent = pontos[0];
+    document.getElementById('pts-p2').textContent = pontos[1];
+  }
+
+  function mostrarResultado(data) {
+    const nome = nomes[data.jogadorIdx];
+    if (!data.acertou) {
+      setFeedback(`❌ ${nome} errou! A palavra era "${data.palavraSecreta}". Nova rodada em breve...`, 'error');
+    } else if (data.completou) {
+      setFeedback(`🎉 ${nome} completou a palavra "${data.palavraSecreta}"! +1 ponto!`, 'success');
+      renderPrefixo(data.palavraSecreta, data.palavraSecreta.length);
+    } else {
+      setFeedback(`✅ ${nome} disse "${data.palavraDigitada}" — nova letra revelada!`, 'success');
+      if (data.prefixo) {
+        renderPrefixo(data.prefixo, totalLetras);
+        prefixoAtual = data.prefixo;
+        letraAtualIdx = data.letraAtual;
+        turnoAtual = data.proximoTurno;
+        atualizarTurnos();
+        const input = document.getElementById('word-input');
+        const btn = document.getElementById('btn-enviar');
+        if (meuIdx === turnoAtual) {
+          document.getElementById('input-row').className = 'word-input-row your-turn';
+          input.disabled = false;
+          btn.disabled = false;
+          input.placeholder = 'Sua vez!';
+          input.focus();
+        } else {
+          document.getElementById('input-row').className = 'word-input-row not-your-turn';
+          input.disabled = true;
+          btn.disabled = true;
+        }
+        input.value = '';
+      }
+    }
+  }
+
+  function setFeedback(msg, tipo) {
+    const el = document.getElementById('feedback-box');
+    el.textContent = msg;
+    el.className = 'feedback-box' + (tipo ? ' ' + tipo : '');
+  }
+
+  function enviarPalavra() {
+    const input = document.getElementById('word-input');
+    const palavra = input.value.trim();
+    if (!palavra) return;
+    socket.emit('enviar_palavra', { salaId, palavra });
+    input.value = '';
+  }
+
+  function mostrarFim(data) {
+    document.getElementById('game-screen').style.display = 'none';
+    document.getElementById('end-screen').style.display = 'block';
+
+    const trophyEl = document.getElementById('trophy-icon');
+    const winEl = document.getElementById('winner-display');
+    const scoresEl = document.getElementById('final-scores');
+
+    if (data.vencedor) {
+      trophyEl.textContent = '🏆';
+      winEl.innerHTML = `<div class="winner-name">${data.vencedor} venceu!</div>`;
+    } else {
+      trophyEl.textContent = '🤝';
+      winEl.innerHTML = `<div class="draw-text">Empate!</div>`;
+    }
+
+    scoresEl.innerHTML = data.nomes.map((nome, i) => `
+      <div class="final-score-card">
+        <div class="name">${nome}</div>
+        <div class="pts" style="color:${i === 0 ? 'var(--accent)' : 'var(--accent2)'}">${data.pontos[i]}</div>
+      </div>
+    `).join('');
+  }
+
+  function reiniciar() {
+    socket.emit('reiniciar_jogo', { salaId });
+    document.getElementById('end-screen').style.display = 'none';
+    document.getElementById('game-screen').style.display = 'block';
+    document.getElementById('pts-p1').textContent = '0';
+    document.getElementById('pts-p2').textContent = '0';
+  }
+
+  // Tecla Enter no input
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('word-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') enviarPalavra();
+    });
+    document.getElementById('inp-nome').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('inp-sala').focus();
+    });
+    document.getElementById('inp-sala').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') entrarSala();
+    });
+    init();
+  });
+</script>
+</body>
+</html>
