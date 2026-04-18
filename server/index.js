@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const { PALAVRAS_SECRETAS, existeNoDicionario, normalizar } = require('./words');
 
 const app = express();
 app.use(cors());
@@ -12,52 +13,7 @@ const io = new Server(server, {
   cors: { origin: '*', methods: ['GET', 'POST'] }
 });
 
-// Lista de palavras secretas com pelo menos 4 letras
-const PALAVRAS = [
-  'ABACATE','ABÓBORA','ACORDO','ACESSO','AGENTE','ALEGRIA','ALFACE','ALUNO',
-  'AMARGO','AMIZADE','AMOR','ANDAR','ANEL','ANIMAL','ANOS','ANTES',
-  'APARELHO','APRENDER','AQUÁRIO','ÁRABE','ÁRVORE','ASAS','ASSIM','ATENÇÃO',
-  'AVENIDA','AVIÃO','AZUL',
-  'BAIRRO','BALEIA','BANANA','BARCO','BATALHA','BEBIDA','BELEZA','BIBLIOTECA',
-  'BICICLETA','BLUSA','BOCA','BOLSA','BOLO','BORBOLETA','BRASIL','BRAVO',
-  'CABELO','CAFÉ','CAIXA','CALOR','CAMELO','CAMINHO','CAMPO','CANETA',
-  'CANÇÃO','CAPITÃO','CARRO','CASA','CAVALO','CÉREBRO','CHAPÉU','CHAVE',
-  'CHOCOLATE','CIDADE','CINEMA','CIRCO','COBRA','COELHO','COGUMELO','COMBATE',
-  'COMIDA','COMPUTADOR','CORAGEM','CORAÇÃO','CORRIDA','CRIANÇA',
-  'DADO','DANÇA','DENTE','DESAFIO','DESTINO','DINHEIRO','DIPLOMA','DISCURSO',
-  'DISTÂNCIA','DIVERSÃO','DORMIR','DRAGÃO',
-  'ESCOLA','ESCRITÓRIO','ESPELHO','ESTRADA','ESTRELA','EXEMPLO',
-  'FÁBRICA','FAMÍLIA','FARDA','FAZENDA','FELIZ','FESTA','FÍGADO','FLOR',
-  'FLORESTA','FORÇA','FORMIGA','FOTOGRAFIA','FRANGO','FRUTA','FUTEBOL',
-  'GALINHA','GARAGEM','GATO','GELADO','GIRASSOL','GLOBO','GOVERNO','GRANDE',
-  'GUERRA','GUITARRA',
-  'HELICÓPTERO','HISTÓRIA','HORIZONTE','HOSPITAL',
-  'ILHA','IMAGEM','IMPOSTO','INDÚSTRIA','INSETO','INTELIGÊNCIA',
-  'JANELA','JARDIM','JOGADOR','JORNAL','JOVEM',
-  'LAGARTO','LAGO','LARANJA','LEBRE','LEITE','LEOPARDO','LETRA','LÍNGUA',
-  'LIVRO','LOBO','LOJA','LONGE','LUA','LUGAR','LUVA',
-  'MAÇÃ','MADEIRA','MADRUGADA','MÃE','MÁGICA','MALETA','MAMÃO','MANGA',
-  'MANGUEIRA','MÁQUINA','MAR','MÁRMORE','MEDO','MELANCIA','MEMÓRIA',
-  'MENINO','MESA','METAL','MILHO','MISTÉRIO','MONTANHA','MOTOR','MUNDO','MÚSICO',
-  'NAÇÃO','NATAL','NATUREZA','NAVE','NEGÓCIO','NINHO','NOITE','NOME','NÚMERO',
-  'OBJETO','ÓCULOS','OLHAR','ONÇA','ÔNIBUS','OURO','OUTRA',
-  'PADRE','PAÍS','PALCO','PALMEIRA','PÃO','PAPEL','PAREDE','PARQUE',
-  'PASSAGEM','PASSARINHO','PATO','PEDRA','PERFUME','PESSOA','PLANETA',
-  'PLANTA','POLVO','PONTE','PORTA','PODER','PROFESSOR','PRAIA',
-  'QUEIJO','QUÍMICA','QUINTO',
-  'RÁDIO','RAPOSA','RAZÃO','RELÓGIO','REINO','REMÉDIO','RIQUEZA','RISCO',
-  'ROBÔ','ROCHA','RODA','ROMANCE','ROSA','ROSTO',
-  'SABÃO','SAÍDA','SALA','SAÚDE','SEGREDO','SEMANA','SEMENTE','SINAL',
-  'SISTEMA','SOL','SONHO','SORTE','SUCO',
-  'TÁBUA','TAMBOR','TARDE','TEATRO','TEMPO','TERRA','TIGRE','TOMATE',
-  'TRABALHO','TREM','TRIBO','TROFÉU','TUCANO',
-  'UNIVERSO','URSO','UVAS',
-  'VACA','VALOR','VENTO','VERDADE','VIAGEM','VIDA','VIZINHO','VOCÊ','VOZ',
-  'XADREZ','XÍCARA',
-  'ZEBRA','ZONA'
-];
-
-const ALFABETO = 'ABCDEFGHIJLMNOPQRSTUVXZ'.split('');
+// ─── Utilitários ───────────────────────────────────────────────────────────────
 
 function embaralhar(arr) {
   const a = [...arr];
@@ -69,23 +25,22 @@ function embaralhar(arr) {
 }
 
 function gerarRodadas() {
-  // Seleciona 10 palavras aleatórias
-  const palavrasSel = embaralhar(PALAVRAS).slice(0, 10);
+  const palavrasSel = embaralhar(PALAVRAS_SECRETAS).slice(0, 10);
   return palavrasSel.map(palavra => ({ palavra, letraAtual: 0 }));
 }
 
-// Salas de jogo: { [salaId]: GameState }
+// ─── Estado das salas ──────────────────────────────────────────────────────────
+
 const salas = {};
 
 function criarSala(salaId) {
   const rodadas = gerarRodadas();
   salas[salaId] = {
-    jogadores: [],      // [{ id, nome, pontos }]
+    jogadores: [],
     rodadaAtual: 0,
     rodadas,
-    turno: 0,           // índice do jogador (0 ou 1)
-    fase: 'aguardando', // aguardando | jogando | fim
-    ultimaResposta: null,
+    turno: 0,
+    fase: 'aguardando',
   };
   return salas[salaId];
 }
@@ -100,9 +55,12 @@ function getRodadaInfo(sala) {
   };
 }
 
+// ─── Socket.IO ─────────────────────────────────────────────────────────────────
+
 io.on('connection', (socket) => {
   console.log('Conectado:', socket.id);
 
+  // ── Entrar na sala ─────────────────────────────────────────────────────────
   socket.on('entrar_sala', ({ salaId, nome }) => {
     if (!salas[salaId]) criarSala(salaId);
     const sala = salas[salaId];
@@ -138,6 +96,7 @@ io.on('connection', (socket) => {
     }
   });
 
+  // ── Enviar palavra ─────────────────────────────────────────────────────────
   socket.on('enviar_palavra', ({ salaId, palavra }) => {
     const sala = salas[salaId];
     if (!sala || sala.fase !== 'jogando') return;
@@ -148,19 +107,32 @@ io.on('connection', (socket) => {
       return;
     }
 
+    // Timeout automático — tratar como erro de validade
+    const isTimeout = palavra.trim() === '___TIMEOUT___';
+
     const info = getRodadaInfo(sala);
-    const palavraUpper = palavra.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    const prefixoNorm = info.prefixo.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    const palavraSecretaNorm = info.palavra.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const palavraUpper = normalizar(palavra);
+    const prefixoNorm  = normalizar(info.prefixo);
+    const secretaNorm  = normalizar(info.palavra);
 
-    const acertou = palavraUpper.startsWith(prefixoNorm);
+    // ── 1. Verifica se existe no dicionário (ignora timeout)
+    if (!isTimeout && !existeNoDicionario(palavraUpper)) {
+      socket.emit('palavra_invalida', {
+        motivo: 'não_dicionario',
+        mensagem: `"${palavraUpper}" não está no dicionário.`,
+      });
+      return; // NÃO avança rodada; jogador deve tentar novamente
+    }
 
-    if (!acertou) {
-      // Errou: próxima rodada
+    // ── 2. Verifica se começa com o prefixo
+    const acertouPrefixo = isTimeout ? false : palavraUpper.startsWith(prefixoNorm);
+
+    if (!acertouPrefixo) {
+      // Errou: passa rodada
       io.to(salaId).emit('resultado_rodada', {
         acertou: false,
         jogadorIdx: idxJogador,
-        palavraDigitada: palavra.toUpperCase(),
+        palavraDigitada: isTimeout ? '(tempo esgotado)' : palavraUpper,
         palavraSecreta: info.palavra,
         prefixo: info.prefixo,
         pontos: sala.jogadores.map(j => j.pontos),
@@ -184,23 +156,26 @@ io.on('connection', (socket) => {
         });
       }, 2500);
     } else {
-      // Acertou: revela mais uma letra ou palavra completa
+      // Acertou o prefixo
       const r = sala.rodadas[sala.rodadaAtual];
 
-      // Verifica se digitou a palavra secreta exata
-      const completou = palavraUpper === palavraSecretaNorm || palavraUpper.startsWith(palavraSecretaNorm) && palavraUpper.length >= palavraSecretaNorm.length;
+      // Verifica se digitou a palavra secreta completa (ou uma palavra que contém ela)
+      const completou = palavraUpper === secretaNorm ||
+        (palavraUpper.startsWith(secretaNorm) && palavraUpper.length >= secretaNorm.length);
 
       if (completou || r.letraAtual >= r.palavra.length - 1) {
-        // Ponto para quem completou
-        sala.jogadores[idxJogador].pontos++;
+        // ✅ Completou: +3 pontos
+        sala.jogadores[idxJogador].pontos += 3;
+
         io.to(salaId).emit('resultado_rodada', {
           acertou: true,
           completou: true,
           jogadorIdx: idxJogador,
-          palavraDigitada: palavra.toUpperCase(),
+          palavraDigitada: palavraUpper,
           palavraSecreta: info.palavra,
           prefixo: info.palavra,
           pontos: sala.jogadores.map(j => j.pontos),
+          pontosGanhos: 3,
         });
 
         sala.rodadaAtual++;
@@ -221,7 +196,7 @@ io.on('connection', (socket) => {
           });
         }, 2500);
       } else {
-        // Avança uma letra
+        // Avança uma letra — troca de turno
         r.letraAtual++;
         sala.turno = sala.turno === 0 ? 1 : 0;
         const novaInfo = getRodadaInfo(sala);
@@ -230,7 +205,7 @@ io.on('connection', (socket) => {
           acertou: true,
           completou: false,
           jogadorIdx: idxJogador,
-          palavraDigitada: palavra.toUpperCase(),
+          palavraDigitada: palavraUpper,
           palavraSecreta: info.palavra,
           prefixo: novaInfo.prefixo,
           pontos: sala.jogadores.map(j => j.pontos),
@@ -242,20 +217,19 @@ io.on('connection', (socket) => {
     }
   });
 
+  // ── Reiniciar jogo ─────────────────────────────────────────────────────────
   socket.on('reiniciar_jogo', ({ salaId }) => {
     if (!salas[salaId]) return;
     const sala = salas[salaId];
     if (sala.jogadores.length < 2) return;
-    const nomes = sala.jogadores.map(j => j.nome);
+
+    const jogadoresAntes = sala.jogadores.map(j => ({ id: j.id, nome: j.nome }));
     criarSala(salaId);
     const novaSala = salas[salaId];
-    // Readiciona jogadores com novos pontos zerados
-    nomes.forEach((nome, i) => {
-      novaSala.jogadores.push({ id: sala.jogadores[i]?.id || '', nome, pontos: 0 });
+
+    jogadoresAntes.forEach((j, i) => {
+      novaSala.jogadores.push({ id: j.id, nome: j.nome, pontos: 0 });
     });
-    // Copia socket ids
-    if (sala.jogadores[0]) novaSala.jogadores[0].id = sala.jogadores[0].id;
-    if (sala.jogadores[1]) novaSala.jogadores[1].id = sala.jogadores[1].id;
 
     novaSala.fase = 'jogando';
     const info = getRodadaInfo(novaSala);
@@ -270,6 +244,7 @@ io.on('connection', (socket) => {
     });
   });
 
+  // ── Desconexão ─────────────────────────────────────────────────────────────
   socket.on('disconnect', () => {
     const salaId = socket.data.salaId;
     if (!salaId || !salas[salaId]) return;
@@ -279,6 +254,8 @@ io.on('connection', (socket) => {
     if (sala.jogadores.length === 0) delete salas[salaId];
   });
 });
+
+// ─── Encerrar jogo ─────────────────────────────────────────────────────────────
 
 function encerrarJogo(salaId) {
   const sala = salas[salaId];
@@ -295,7 +272,9 @@ function encerrarJogo(salaId) {
   });
 }
 
-app.get('/health', (_, res) => res.json({ ok: true }));
+// ─── Health check ──────────────────────────────────────────────────────────────
+
+app.get('/health', (_, res) => res.json({ ok: true, palavras: PALAVRAS_SECRETAS.length }));
 
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+server.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT} | ${PALAVRAS_SECRETAS.length} palavras no dicionário`));

@@ -20,6 +20,7 @@
       --green: #4ade80;
       --red: #f87171;
       --yellow: #facc15;
+      --orange: #fb923c;
       --radius: 12px;
       --radius-sm: 8px;
     }
@@ -59,13 +60,12 @@
     }
 
     .card-title {
-      font-size: 1.1rem;
+      font-size: 0.75rem;
       font-weight: 600;
       margin-bottom: 1.25rem;
       color: var(--muted);
       text-transform: uppercase;
       letter-spacing: 1px;
-      font-size: 0.75rem;
     }
 
     input[type="text"] {
@@ -98,365 +98,167 @@
       transition: all 0.15s;
     }
 
-    .btn-primary {
-      background: var(--accent);
-      color: #fff;
-      width: 100%;
-    }
+    .btn-primary { background: var(--accent); color: #fff; width: 100%; }
     .btn-primary:hover { filter: brightness(1.15); }
     .btn-primary:active { transform: scale(0.98); }
 
-    .btn-secondary {
-      background: var(--surface2);
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
+    .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
     .btn-secondary:hover { background: var(--border); }
 
     .divider {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin: 1rem 0;
-      color: var(--muted);
-      font-size: 0.85rem;
+      display: flex; align-items: center; gap: 1rem; margin: 1rem 0;
+      color: var(--muted); font-size: 0.85rem;
     }
-    .divider::before, .divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-    }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-    /* Sala waiting */
-    .waiting-info {
-      text-align: center;
-      padding: 1rem 0;
-    }
-    .waiting-info .big-letter {
-      font-size: 3rem;
-      font-weight: 700;
-      color: var(--accent);
-      letter-spacing: 4px;
-      font-family: monospace;
-    }
-    .copy-link {
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 1rem;
-    }
-    .copy-link input {
-      flex: 1;
-      margin-bottom: 0;
-      font-size: 0.85rem;
-      color: var(--muted);
-    }
-    .copy-link button {
-      padding: 0.75rem 1rem;
-      white-space: nowrap;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      font-size: 0.85rem;
-    }
+    /* Waiting */
+    .waiting-info { text-align: center; padding: 1rem 0; }
+    .copy-link { display: flex; gap: 0.5rem; margin-top: 1rem; }
+    .copy-link input { flex: 1; margin-bottom: 0; font-size: 0.85rem; color: var(--muted); }
+    .copy-link button { padding: 0.75rem 1rem; white-space: nowrap; background: var(--surface2); border: 1px solid var(--border); color: var(--text); font-size: 0.85rem; }
 
     /* Game screen */
     #game-screen { display: none; width: 100%; max-width: 600px; }
 
-    .players-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
+    .players-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
 
     .player-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1rem;
-      text-align: center;
-      transition: border-color 0.3s, box-shadow 0.3s;
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 1rem; text-align: center; transition: border-color 0.3s, box-shadow 0.3s;
     }
-
-    .player-card.active {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 2px rgba(108,99,255,0.2);
-    }
-
-    .player-card.active-p2 {
-      border-color: var(--accent2);
-      box-shadow: 0 0 0 2px rgba(255,101,132,0.2);
-    }
+    .player-card.active { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(108,99,255,0.2); }
+    .player-card.active-p2 { border-color: var(--accent2); box-shadow: 0 0 0 2px rgba(255,101,132,0.2); }
 
     .player-avatar {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.25rem;
-      font-weight: 700;
-      margin: 0 auto 0.5rem;
+      width: 48px; height: 48px; border-radius: 50%; display: flex;
+      align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 700; margin: 0 auto 0.5rem;
     }
-
     .avatar-1 { background: rgba(108,99,255,0.2); color: var(--accent); }
     .avatar-2 { background: rgba(255,101,132,0.2); color: var(--accent2); }
 
-    .player-name {
-      font-size: 0.9rem;
-      font-weight: 600;
-      margin-bottom: 0.25rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .player-points {
-      font-size: 1.75rem;
-      font-weight: 700;
-    }
-
+    .player-name { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .player-points { font-size: 1.75rem; font-weight: 700; }
     .p1-points { color: var(--accent); }
     .p2-points { color: var(--accent2); }
 
     .turn-badge {
-      display: inline-block;
-      font-size: 0.65rem;
-      padding: 2px 8px;
-      border-radius: 20px;
-      margin-top: 0.25rem;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
+      display: inline-block; font-size: 0.65rem; padding: 2px 8px; border-radius: 20px;
+      margin-top: 0.25rem; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;
     }
-
     .badge-1 { background: rgba(108,99,255,0.2); color: var(--accent); }
     .badge-2 { background: rgba(255,101,132,0.2); color: var(--accent2); }
 
     .game-body {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 2rem;
-      text-align: center;
-      margin-bottom: 1rem;
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 2rem; text-align: center; margin-bottom: 1rem;
     }
 
-    .round-info {
-      font-size: 0.75rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 1.5rem;
-    }
+    .round-info { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1.5rem; }
 
     .prefix-display {
-      font-size: 3rem;
-      font-weight: 800;
-      letter-spacing: 8px;
-      font-family: monospace;
-      margin-bottom: 0.5rem;
-      min-height: 4rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
+      font-size: 3rem; font-weight: 800; letter-spacing: 8px; font-family: monospace;
+      margin-bottom: 0.5rem; min-height: 4rem; display: flex; align-items: center; justify-content: center; gap: 4px;
     }
 
     .prefix-char {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 48px;
-      height: 56px;
-      background: var(--surface2);
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border);
-      font-size: 2rem;
-      transition: all 0.3s;
+      display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 56px;
+      background: var(--surface2); border-radius: var(--radius-sm); border: 1px solid var(--border);
+      font-size: 2rem; transition: all 0.3s;
     }
+    .prefix-char.revealed { border-color: var(--accent); color: var(--accent); background: rgba(108,99,255,0.1); }
+    .prefix-char.hidden { color: transparent; background: var(--surface2); border-color: var(--border); position: relative; }
+    .prefix-char.hidden::after { content: '?'; position: absolute; color: var(--border); font-size: 1.5rem; }
 
-    .prefix-char.revealed {
-      border-color: var(--accent);
-      color: var(--accent);
-      background: rgba(108,99,255,0.1);
-    }
+    .hint-text { font-size: 0.85rem; color: var(--muted); margin-bottom: 1.5rem; }
 
-    .prefix-char.hidden {
-      color: transparent;
-      background: var(--surface2);
-      border-color: var(--border);
-      position: relative;
-    }
-
-    .prefix-char.hidden::after {
-      content: '?';
-      position: absolute;
-      color: var(--border);
-      font-size: 1.5rem;
-    }
-
-    .hint-text {
-      font-size: 0.85rem;
-      color: var(--muted);
-      margin-bottom: 1.5rem;
-    }
-
-    .word-input-row {
-      display: flex;
-      gap: 0.5rem;
-    }
-
-    .word-input-row input {
-      flex: 1;
-      margin-bottom: 0;
-      font-size: 1.1rem;
-      text-transform: uppercase;
-    }
-
-    .word-input-row button {
-      padding: 0.75rem 1.25rem;
-      background: var(--accent);
-      color: #fff;
-      font-size: 0.9rem;
-    }
-
+    .word-input-row { display: flex; gap: 0.5rem; }
+    .word-input-row input { flex: 1; margin-bottom: 0; font-size: 1.1rem; text-transform: uppercase; }
+    .word-input-row button { padding: 0.75rem 1.25rem; background: var(--accent); color: #fff; font-size: 0.9rem; }
     .word-input-row button:hover { filter: brightness(1.15); }
-    .word-input-row button:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-      filter: none;
-    }
+    .word-input-row button:disabled { opacity: 0.4; cursor: not-allowed; filter: none; }
 
     /* Feedback */
     .feedback-box {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1rem 1.5rem;
-      font-size: 0.95rem;
-      color: var(--muted);
-      text-align: center;
-      min-height: 56px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s;
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 1rem 1.5rem; font-size: 0.95rem; color: var(--muted); text-align: center;
+      min-height: 56px; display: flex; align-items: center; justify-content: center; transition: all 0.3s;
     }
-
     .feedback-box.success { border-color: var(--green); color: var(--green); background: rgba(74,222,128,0.05); }
     .feedback-box.error { border-color: var(--red); color: var(--red); background: rgba(248,113,113,0.05); }
     .feedback-box.warning { border-color: var(--yellow); color: var(--yellow); background: rgba(250,204,21,0.05); }
+    .feedback-box.invalida { border-color: var(--orange); color: var(--orange); background: rgba(251,146,60,0.05); }
+    .feedback-box.bonus { border-color: var(--yellow); color: var(--yellow); background: rgba(250,204,21,0.08); font-weight: 700; }
+
+    /* Badge de pontos ganhos */
+    .pts-badge {
+      display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 0.8rem;
+      font-weight: 700; margin-left: 0.5rem; vertical-align: middle;
+    }
+    .pts-badge.pts-3 { background: rgba(250,204,21,0.2); color: var(--yellow); }
+    .pts-badge.pts-1 { background: rgba(74,222,128,0.2); color: var(--green); }
 
     /* End screen */
-    #end-screen {
-      display: none;
-      width: 100%;
-      max-width: 480px;
-      text-align: center;
-    }
-
+    #end-screen { display: none; width: 100%; max-width: 480px; text-align: center; }
     .trophy { font-size: 4rem; margin-bottom: 1rem; }
     .winner-name { font-size: 2rem; font-weight: 700; margin-bottom: 0.25rem; }
     .draw-text { font-size: 1.5rem; font-weight: 600; color: var(--yellow); }
 
-    .final-scores {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      margin: 1.5rem 0;
-    }
-
-    .final-score-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1.25rem;
-    }
-
+    .final-scores { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0; }
+    .final-score-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
     .final-score-card .name { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.5rem; }
     .final-score-card .pts { font-size: 2.5rem; font-weight: 700; }
 
     .spinner {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
+      display: inline-block; width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+      border-radius: 50%; animation: spin 0.7s linear infinite;
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
-
     .pulse { animation: pulse 1.5s ease-in-out infinite; }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     .fade-in { animation: fadeIn 0.4s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .shake { animation: shake 0.4s ease; }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      40% { transform: translateX(6px); }
+      60% { transform: translateX(-4px); }
+      80% { transform: translateX(4px); }
+    }
 
     .not-your-turn { opacity: 0.6; pointer-events: none; }
     .your-turn { opacity: 1; }
 
-    .progress-bar {
-      height: 4px;
-      background: var(--border);
-      border-radius: 2px;
-      margin-bottom: 1.5rem;
-      overflow: hidden;
-    }
+    .progress-bar { height: 4px; background: var(--border); border-radius: 2px; margin-bottom: 1.5rem; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; transition: width 0.5s ease; }
 
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      border-radius: 2px;
-      transition: width 0.5s ease;
+    /* Cronômetro */
+    .timer-display { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 1.25rem; }
+    .timer-circle {
+      width: 56px; height: 56px; border-radius: 50%; border: 3px solid var(--border);
+      display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
+      font-weight: 700; font-family: monospace; transition: border-color 0.3s, color 0.3s;
     }
+    .timer-circle.ok    { border-color: var(--green);  color: var(--green); }
+    .timer-circle.warn  { border-color: var(--yellow); color: var(--yellow); }
+    .timer-circle.danger{ border-color: var(--red);    color: var(--red); animation: pulse 0.6s ease-in-out infinite; }
+    .timer-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+    /* Dica de regra */
+    .rules-hint {
+      font-size: 0.75rem; color: var(--muted); text-align: center; margin-top: 0.5rem;
+      display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+    }
+    .rules-hint .star { color: var(--yellow); }
 
     @media (max-width: 480px) {
       .prefix-char { width: 36px; height: 44px; font-size: 1.5rem; }
       .game-body { padding: 1.25rem; }
       .player-points { font-size: 1.4rem; }
       h1 { font-size: 1.5rem; }
-    }
-
-    /* Cronômetro */
-    .timer-display {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      margin-bottom: 1.25rem;
-    }
-
-    .timer-circle {
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      border: 3px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.4rem;
-      font-weight: 700;
-      font-family: monospace;
-      transition: border-color 0.3s, color 0.3s;
-    }
-
-    .timer-circle.ok    { border-color: var(--green);  color: var(--green); }
-    .timer-circle.warn  { border-color: var(--yellow); color: var(--yellow); }
-    .timer-circle.danger{ border-color: var(--red);    color: var(--red); animation: pulse 0.6s ease-in-out infinite; }
-
-    .timer-label {
-      font-size: 0.75rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
     }
   </style>
 </head>
@@ -466,20 +268,13 @@
 <div id="lobby-screen">
   <h1>LetraDuelo</h1>
   <p class="subtitle">Batalha de palavras em tempo real</p>
-
   <div class="card" id="join-card">
     <div class="card-title">Entrar no jogo</div>
     <input type="text" id="inp-nome" placeholder="Seu nome" maxlength="20" />
     <input type="text" id="inp-sala" placeholder="Código da sala (ex: 1234)" maxlength="10" />
-    <button class="btn-primary" onclick="entrarSala()">
-      <span>Entrar na sala</span>
-    </button>
-
+    <button class="btn-primary" onclick="entrarSala()">Entrar na sala</button>
     <div class="divider">ou</div>
-
-    <button class="btn-secondary" style="width:100%;" onclick="criarSalaAleatoria()">
-      Criar nova sala
-    </button>
+    <button class="btn-secondary" style="width:100%;" onclick="criarSalaAleatoria()">Criar nova sala</button>
   </div>
 </div>
 
@@ -529,7 +324,6 @@
     <div class="progress-bar">
       <div class="progress-fill" id="progress-fill" style="width:0%"></div>
     </div>
-    <!-- Cronômetro -->
     <div class="timer-display">
       <div class="timer-circle ok" id="timer-circle">10</div>
       <span class="timer-label">segundos</span>
@@ -539,6 +333,10 @@
     <div class="word-input-row" id="input-row">
       <input type="text" id="word-input" placeholder="Sua palavra..." autocomplete="off" autocorrect="off" spellcheck="false" />
       <button id="btn-enviar" onclick="enviarPalavra()">Enviar</button>
+    </div>
+    <div class="rules-hint">
+      <span class="star">★</span>
+      Acertar a palavra completa vale <strong style="color:var(--yellow);">3 pontos</strong> &nbsp;·&nbsp; apenas palavras do dicionário são aceitas
     </div>
   </div>
 
@@ -554,23 +352,19 @@
 </div>
 
 <script>
-  // ===================== CONFIG =====================
   const SERVER_URL = window.location.hostname === 'localhost'
     ? 'https://letraduelo.onrender.com/'
     : 'https://letraduelo.onrender.com/';
 
-  // ===================== ESTADO =====================
   let socket;
   let salaId = '';
   let meuIdx = -1;
   let turnoAtual = 0;
   let prefixoAtual = '';
-  let letraAtualIdx = 0;
   let totalLetras = 0;
   let nomes = ['', ''];
-  let isConectado = false;
 
-  // ===================== CRONÔMETRO =====================
+  // ── Cronômetro ───────────────────────────────────────────────────────────────
   let timerInterval = null;
   let timerSegundos = 10;
   const TIMER_INICIAL = 10;
@@ -579,35 +373,28 @@
     pararTimer();
     timerSegundos = TIMER_INICIAL;
     atualizarTimerDisplay();
-
     timerInterval = setInterval(() => {
       timerSegundos--;
       atualizarTimerDisplay();
-
       if (timerSegundos <= 0) {
         pararTimer();
-        // Tempo esgotado: envia palavra inválida automaticamente
         socket.emit('enviar_palavra', { salaId, palavra: '___TIMEOUT___' });
       }
     }, 1000);
   }
 
   function pararTimer() {
-    if (timerInterval) {
-      clearInterval(timerInterval);
-      timerInterval = null;
-    }
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   }
 
   function atualizarTimerDisplay() {
     const circle = document.getElementById('timer-circle');
     if (!circle) return;
     circle.textContent = timerSegundos;
-
     circle.className = 'timer-circle';
-    if (timerSegundos > 5)       circle.classList.add('ok');
-    else if (timerSegundos > 2)  circle.classList.add('warn');
-    else                          circle.classList.add('danger');
+    if (timerSegundos > 5)      circle.classList.add('ok');
+    else if (timerSegundos > 2) circle.classList.add('warn');
+    else                         circle.classList.add('danger');
   }
 
   function resetarTimerDisplay() {
@@ -618,7 +405,7 @@
     if (circle) circle.className = 'timer-circle ok';
   }
 
-  // ===================== INICIALIZAÇÃO =====================
+  // ── Init ─────────────────────────────────────────────────────────────────────
   function init() {
     const params = new URLSearchParams(window.location.search);
     const salaParam = params.get('sala');
@@ -626,9 +413,9 @@
 
     socket = io(SERVER_URL, { transports: ['websocket', 'polling'] });
 
-    socket.on('connect', () => { isConectado = true; });
-    socket.on('disconnect', () => { isConectado = false; });
-    socket.on('erro', (msg) => { alert(msg); });
+    socket.on('connect', () => {});
+    socket.on('disconnect', () => {});
+    socket.on('erro', (msg) => alert(msg));
 
     socket.on('sala_atualizada', (data) => {
       if (data.fase === 'aguardando') mostrarWaiting();
@@ -636,12 +423,31 @@
 
     socket.on('iniciar_jogo', (data) => {
       nomes = [data.jogadores[0].nome, data.jogadores[1].nome];
-      meuIdx = nomes.indexOf(document.getElementById('inp-nome').value.trim() || 'Jogador');
+      const nomeLocal = document.getElementById('inp-nome').value.trim() || 'Jogador';
+      meuIdx = nomes.indexOf(nomeLocal);
+      if (meuIdx === -1) meuIdx = 0;
       iniciarInterface(data);
     });
 
+    // ── Palavra inválida (não está no dicionário) ─────────────────────────────
+    socket.on('palavra_invalida', (data) => {
+      // Não avança rodada — jogador precisa tentar outra palavra
+      setFeedback(`📖 ${data.mensagem} Tente outra palavra!`, 'invalida');
+      const input = document.getElementById('word-input');
+      input.value = '';
+      input.focus();
+      // Shake visual no input
+      const row = document.getElementById('input-row');
+      row.classList.remove('shake');
+      void row.offsetWidth; // reflow
+      row.classList.add('shake');
+      setTimeout(() => row.classList.remove('shake'), 500);
+      // Reinicia timer pois o jogador ainda tem a vez
+      iniciarTimer();
+    });
+
     socket.on('resultado_rodada', (data) => {
-      pararTimer(); // Para o timer ao receber resultado
+      pararTimer();
       atualizarPontos(data.pontos);
       mostrarResultado(data);
     });
@@ -649,10 +455,8 @@
     socket.on('nova_rodada', (data) => {
       turnoAtual = data.turno;
       prefixoAtual = data.prefixo;
-      letraAtualIdx = data.letraAtual;
       totalLetras = data.totalLetras;
       atualizarRodada(data);
-      // Nova rodada: timer volta ao inicial e começa se for minha vez
       if (meuIdx === data.turno) iniciarTimer();
       else resetarTimerDisplay();
     });
@@ -668,7 +472,7 @@
     });
   }
 
-  // ===================== LOBBY =====================
+  // ── Lobby ────────────────────────────────────────────────────────────────────
   function criarSalaAleatoria() {
     const sala = Math.floor(1000 + Math.random() * 9000).toString();
     document.getElementById('inp-sala').value = sala;
@@ -679,16 +483,11 @@
     const nome = document.getElementById('inp-nome').value.trim() || 'Jogador';
     const sala = document.getElementById('inp-sala').value.trim();
     if (!sala) { alert('Digite um código de sala!'); return; }
-
     salaId = sala;
     socket.emit('entrar_sala', { salaId: sala, nome });
-
     socket.once('sala_atualizada', (data) => {
       if (data.jogadores && data.jogadores.length === 1) {
         mostrarWaiting();
-        const link = `${window.location.origin}${window.location.pathname}?sala=${sala}`;
-        document.getElementById('link-sala').value = link;
-        document.getElementById('codigo-sala').textContent = sala;
       } else {
         document.getElementById('lobby-screen').style.display = 'none';
       }
@@ -713,7 +512,7 @@
     });
   }
 
-  // ===================== JOGO =====================
+  // ── Jogo ─────────────────────────────────────────────────────────────────────
   function iniciarInterface(data) {
     document.getElementById('waiting-screen').style.display = 'none';
     document.getElementById('lobby-screen').style.display = 'none';
@@ -729,49 +528,42 @@
 
     turnoAtual = data.turno;
     prefixoAtual = data.prefixo;
-    letraAtualIdx = data.letraAtual;
     totalLetras = data.totalLetras;
 
     atualizarRodada({
-      turno: data.turno,
-      prefixo: data.prefixo,
-      rodadaAtual: data.rodadaAtual,
-      totalRodadas: data.totalRodadas,
-      letraAtual: data.letraAtual,
-      totalLetras: data.totalLetras,
+      turno: data.turno, prefixo: data.prefixo,
+      rodadaAtual: data.rodadaAtual, totalRodadas: data.totalRodadas,
+      letraAtual: data.letraAtual, totalLetras: data.totalLetras,
     });
 
-    // Inicia timer apenas para quem é a vez
     if (meuIdx === data.turno) iniciarTimer();
     else resetarTimerDisplay();
 
-    setFeedback('Jogo começou! Boa sorte!', '');
+    setFeedback('Jogo começou! Boa sorte! 🎮', '');
   }
 
   function atualizarRodada(data) {
     turnoAtual = data.turno;
     prefixoAtual = data.prefixo;
-    letraAtualIdx = data.letraAtual !== undefined ? data.letraAtual : letraAtualIdx;
     totalLetras = data.totalLetras || totalLetras;
 
     document.getElementById('round-info').textContent = `Rodada ${data.rodadaAtual + 1} de ${data.totalRodadas}`;
     document.getElementById('game-round-top').textContent = `${data.rodadaAtual + 1}/${data.totalRodadas}`;
-
-    const pct = (data.rodadaAtual / data.totalRodadas) * 100;
-    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('progress-fill').style.width = ((data.rodadaAtual / data.totalRodadas) * 100) + '%';
 
     renderPrefixo(prefixoAtual, totalLetras);
     atualizarTurnos();
 
     const input = document.getElementById('word-input');
-    const btn = document.getElementById('btn-enviar');
+    const btn   = document.getElementById('btn-enviar');
+
     if (meuIdx === turnoAtual) {
       document.getElementById('input-row').className = 'word-input-row your-turn';
       input.disabled = false;
       btn.disabled = false;
       input.placeholder = 'Sua vez! Digite uma palavra...';
       input.focus();
-      setFeedback(`Sua vez! A palavra começa com "${prefixoAtual}"`, '');
+      setFeedback(`Sua vez! A palavra começa com "${prefixoAtual}" — apenas palavras do dicionário!`, '');
     } else {
       document.getElementById('input-row').className = 'word-input-row not-your-turn';
       input.disabled = true;
@@ -827,34 +619,40 @@
 
   function mostrarResultado(data) {
     const nome = nomes[data.jogadorIdx];
+
     if (!data.acertou) {
-      setFeedback(`❌ ${nome} errou! A palavra era "${data.palavraSecreta}". Nova rodada em breve...`, 'error');
+      const digitada = data.palavraDigitada === '(tempo esgotado)'
+        ? 'Tempo esgotado!' : `"${data.palavraDigitada}"`;
+      setFeedback(`❌ ${nome}: ${digitada}. A palavra era "${data.palavraSecreta}". Nova rodada...`, 'error');
     } else if (data.completou) {
-      setFeedback(`🎉 ${nome} completou a palavra "${data.palavraSecreta}"! +1 ponto!`, 'success');
+      const pts = data.pontosGanhos || 3;
+      setFeedback(
+        `🏆 ${nome} completou a palavra "${data.palavraSecreta}"! +${pts} pontos!`,
+        'bonus'
+      );
       renderPrefixo(data.palavraSecreta, data.palavraSecreta.length);
     } else {
       setFeedback(`✅ ${nome} disse "${data.palavraDigitada}" — nova letra revelada!`, 'success');
       if (data.prefixo) {
         renderPrefixo(data.prefixo, totalLetras);
         prefixoAtual = data.prefixo;
-        letraAtualIdx = data.letraAtual;
         turnoAtual = data.proximoTurno;
         atualizarTurnos();
 
         const input = document.getElementById('word-input');
-        const btn = document.getElementById('btn-enviar');
+        const btn   = document.getElementById('btn-enviar');
         if (meuIdx === turnoAtual) {
           document.getElementById('input-row').className = 'word-input-row your-turn';
           input.disabled = false;
           btn.disabled = false;
           input.placeholder = 'Sua vez!';
           input.focus();
-          iniciarTimer(); // ← começa timer para quem recebeu a vez
+          iniciarTimer();
         } else {
           document.getElementById('input-row').className = 'word-input-row not-your-turn';
           input.disabled = true;
           btn.disabled = true;
-          resetarTimerDisplay(); // ← mostra 10 parado para quem está esperando
+          resetarTimerDisplay();
         }
         input.value = '';
       }
@@ -873,7 +671,9 @@
     if (!palavra) return;
     pararTimer();
     socket.emit('enviar_palavra', { salaId, palavra });
-    input.value = '';
+    // Não limpamos o input aqui — esperamos resposta do servidor
+    // Se a palavra for inválida, o servidor devolve 'palavra_invalida' e limpamos lá
+    // Se for válida, a rodada avança normalmente
   }
 
   function mostrarFim(data) {
@@ -881,7 +681,7 @@
     document.getElementById('end-screen').style.display = 'block';
 
     const trophyEl = document.getElementById('trophy-icon');
-    const winEl = document.getElementById('winner-display');
+    const winEl    = document.getElementById('winner-display');
     const scoresEl = document.getElementById('final-scores');
 
     if (data.vencedor) {
